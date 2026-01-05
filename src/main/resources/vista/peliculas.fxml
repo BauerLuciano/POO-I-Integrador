@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<HBox spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.eventos.controlador.PeliculasController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <VBox spacing="10.0">
+        <Label fx:id="lblCicloNombre" text="Películas del Ciclo">
+            <font><Font name="System Bold" size="16.0" /></font>
+        </Label>
+        <ListView fx:id="listaPeliculas" prefHeight="300.0" prefWidth="250.0" />
+        <Button text="Eliminar Seleccionada" onAction="#eliminarPelicula" style="-fx-background-color: #ff4444; -fx-text-fill: white;"/>
+    </VBox>
+
+    <VBox spacing="10.0" style="-fx-border-color: #ccc; -fx-padding: 10; -fx-border-radius: 5;">
+        <Label text="Agregar Nueva Película" style="-fx-font-weight: bold;"/>
+        
+        <Label text="Título:" />
+        <TextField fx:id="txtTitulo" />
+        
+        <Label text="Director:" />
+        <TextField fx:id="txtDirector" />
+        
+        <Label text="Duración (minutos):" />
+        <TextField fx:id="txtDuracion" prefWidth="80.0" promptText="Ej: 120"/>
+        
+        <Button text="Agregar al Ciclo" onAction="#agregarPelicula" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </VBox>
+
+</HBox>

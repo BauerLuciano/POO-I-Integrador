@@ -6,27 +6,30 @@ import java.util.List;
 
 @Entity
 @Table(name = "ciclos_cine")
+@PrimaryKeyJoinColumn(name = "id")
 public class CicloCine extends Evento {
 
     @Column(name = "hay_charlas")
     private boolean hayCharlas;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "ciclo_cine_id") 
-    @OrderColumn(name = "orden_proyeccion") 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "ciclo_id") 
     private List<Pelicula> peliculas = new ArrayList<>();
 
-    public CicloCine() {
-        super();
-    }
+    public CicloCine() { super(); }
+
+    public boolean isHayCharlas() { return hayCharlas; }
+    public void setHayCharlas(boolean hayCharlas) { this.hayCharlas = hayCharlas; }
+
+    // Getter para la lista
+    public List<Pelicula> getPeliculas() { return peliculas; }
     
+    // Método helper para agregar fácil
     public void agregarPelicula(Pelicula p) {
         this.peliculas.add(p);
     }
-
-    // Getters y Setters
-    public boolean isHayCharlas() { return hayCharlas; }
-    public void setHayCharlas(boolean hayCharlas) { this.hayCharlas = hayCharlas; }
     
-    public List<Pelicula> getPeliculas() { return peliculas; }
+    public void eliminarPelicula(Pelicula p) {
+        this.peliculas.remove(p);
+    }
 }
