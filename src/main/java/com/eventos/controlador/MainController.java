@@ -1,20 +1,21 @@
-package main.java.com.eventos.controlador;
+package com.eventos.controlador;
 
 import com.eventos.modelo.Evento;
+import com.eventos.modelo.Taller; // Importante para validar si es taller
 import com.eventos.repo.EventoRepository;
 import com.eventos.repo.EventoRepositoryImpl;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.fxml.FXMLLoader; // Necesario para cargar la otra ventana
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Modality; // Para que la ventana bloquee a la de atrás
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.time.LocalDateTime;
@@ -44,7 +45,7 @@ public class MainController {
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaInicio"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        // Truco para mostrar el TIPO de clase (Taller, Concierto, etc)
+        // Truco para mostrar el TIPO de clase (Taller, Concierto, etc.)
         colTipo.setCellValueFactory(cellData -> 
             new SimpleStringProperty(cellData.getValue().getClass().getSimpleName())
         );
@@ -62,31 +63,66 @@ public class MainController {
         }
     }
 
-    // --- ACÁ ESTÁ LA MAGIA: ABRIR LA VENTANA DE ALTA ---
+    // --- ABRIR ALTA DE EVENTO (Polimórfica) ---
     @FXML
     public void abrirNuevoEvento() {
         try {
-            // 1. Cargamos el archivo FXML de la ventana nueva
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/evento.fxml"));
             Parent root = loader.load();
 
-            // 2. Creamos el escenario (Stage)
             Stage stage = new Stage();
             stage.setTitle("Alta de Nuevo Evento");
             stage.setScene(new Scene(root));
-            
-            // 3. Configuración Modal (No podés tocar la ventana de atrás hasta cerrar esta)
-            stage.initModality(Modality.APPLICATION_MODAL);
-            
-            // 4. Mostramos y esperamos a que cierre
+            stage.initModality(Modality.APPLICATION_MODAL); // Bloquea la ventana de atrás
             stage.showAndWait();
 
-            // 5. Cuando se cierra, refrescamos la tabla para ver el nuevo evento
-            cargarEventos();
+            cargarEventos(); // Refrescar al volver
 
         } catch (Exception e) {
             e.printStackTrace();
             mostrarAlerta("Error", "No se pudo abrir la ventana de alta: " + e.getMessage());
+        }
+    }
+
+    // --- NUEVO: ABRIR INSCRIPCIÓN (Solo para Talleres) ---
+    @FXML
+    public void abrirInscripcion() {
+        // 1. Obtener el evento seleccionado en la tabla
+        Evento seleccionado = tablaEventos.getSelectionModel().getSelectedItem();
+        
+        if (seleccionado == null) {
+            mostrarAlerta("Atención", "Seleccioná un evento de la lista primero.");
+            return;
+        }
+
+        // 2. Validar que sea un Taller (Polimorfismo: instanceof)
+        if (!(seleccionado instanceof Taller)) {
+            mostrarAlerta("Acción no válida", "La inscripción solo está disponible para Talleres.\nEl evento seleccionado es un: " + seleccionado.getClass().getSimpleName());
+            return;
+        }
+
+        try {
+            // 3. Cargar el FXML de Inscripción
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/inscripcion.fxml"));
+            Parent root = loader.load();
+
+            // 4. Pasar los datos al controlador de inscripción
+            InscripcionController controller = loader.getController();
+            controller.initData((Taller) seleccionado); // Le pasamos el taller elegido
+
+            // 5. Mostrar ventana modal
+            Stage stage = new Stage();
+            stage.setTitle("Inscripción a Taller");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+            
+            // Refrescar tabla al volver (por si cambió el estado/cupo)
+            cargarEventos();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Error", "No se pudo abrir la inscripción: " + e.getMessage());
         }
     }
 
