@@ -1,7 +1,6 @@
 # Sistema de Gestión de Eventos Culturales 🎭
 
-**Trabajo Integrador 2025 - Programación Orientada a Objetos I**
-*Universidad Nacional de Misiones*
+**Trabajo Integrador 2026 - Programación Orientada a Objetos I**
 
 Este proyecto implementa una aplicación de escritorio para la gestión integral de eventos municipales (ferias, conciertos, exposiciones, talleres y ciclos de cine), permitiendo la administración de recursos, responsables y participantes.
 
