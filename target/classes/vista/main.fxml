@@ -34,8 +34,10 @@
     </TableView>
 
     <HBox spacing="10.0" alignment="CENTER_RIGHT">
-        <Button text="Refrescar" onAction="#cargarEventos"/>
+        <Button text="Refrescar Lista" onAction="#cargarEventos"/>
         
+        <Button text="Inscribir Persona" onAction="#abrirInscripcion" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;"/>
+
         <Button text="Nuevo Evento" onAction="#abrirNuevoEvento" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
         
         <Button text="Eliminar Seleccionado" onAction="#eliminarEvento" style="-fx-background-color: #ff4444; -fx-text-fill: white;"/>
