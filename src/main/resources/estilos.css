@@ -1,13 +1,14 @@
+/* --- ESTILOS GENERALES --- */
 .root {
-    -fx-background-color: #f4f6f8;
+    -fx-background-color: #f4f6f8; /* Fondo gris suave moderno */
     -fx-font-family: 'Segoe UI', sans-serif;
 }
 
 .label-titulo {
-    -fx-font-size: 24px;
+    -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-text-fill: #2c3e50;
-    -fx-padding: 0 0 10 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 0, 0, 0, 2);
 }
 
 .label {
@@ -16,46 +17,131 @@
     -fx-font-weight: 600;
 }
 
+/* --- CAMPOS DE TEXTO --- */
 .text-field {
     -fx-background-color: white;
     -fx-background-radius: 5px;
     -fx-border-color: #cfd8dc;
     -fx-border-radius: 5px;
     -fx-padding: 8px;
+    -fx-font-size: 14px;
 }
 
 .text-field:focused {
     -fx-border-color: #2196F3;
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(three-pass-box, rgba(33,150,243,0.3), 5, 0, 0, 0);
 }
 
+/* --- BOTONES --- */
 .button {
     -fx-cursor: hand;
     -fx-font-weight: bold;
-    -fx-padding: 8 15;
+    -fx-padding: 8 20;
     -fx-background-radius: 5px;
     -fx-text-fill: white;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 1);
+    -fx-font-size: 13px;
 }
 
-/* Azul (Crear / Guardar) */
-.btn-primary {
-    -fx-background-color: #2196F3;
-}
+.btn-primary { -fx-background-color: #2196F3; }
 .btn-primary:hover { -fx-background-color: #1976D2; }
 
-/* Gris (Volver / Limpiar) */
-.btn-secondary {
-    -fx-background-color: #95a5a6;
-}
-.btn-secondary:hover { -fx-background-color: #7f8c8d; }
+.btn-secondary { -fx-background-color: #78909c; }
+.btn-secondary:hover { -fx-background-color: #607d8b; }
 
-/* Naranja (Editar) */
-.btn-warning {
-    -fx-background-color: #f39c12;
-}
-.btn-warning:hover { -fx-background-color: #e67e22; }
+.btn-warning { -fx-background-color: #ffa726; }
+.btn-warning:hover { -fx-background-color: #f57c00; }
 
-/* Rojo (Eliminar) */
-.btn-danger {
-    -fx-background-color: #e74c3c;
+.btn-danger { -fx-background-color: #ef5350; }
+.btn-danger:hover { -fx-background-color: #d32f2f; }
+
+/* --- TABLA FACHERA (TableView) --- */
+.table-view {
+    -fx-background-color: white; /* Fondo blanco */
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    /* Sombra suave alrededor de la tabla */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5); 
+    -fx-padding: 0;
 }
-.btn-danger:hover { -fx-background-color: #c0392b; }
+
+/* Cabecera de la tabla (Header) */
+.table-view .column-header-background {
+    -fx-background-color: #37474f; /* Gris oscuro elegante */
+    -fx-background-radius: 5px 5px 0 0; /* Bordes redondos solo arriba */
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-size: 45px; /* Altura de la cabecera */
+    -fx-border-width: 0 0 2px 0;
+    -fx-border-color: #263238;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white; /* Texto blanco en cabecera */
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 0 0 10;
+}
+
+/* Filas de la tabla */
+.table-row-cell {
+    -fx-background-color: white;
+    -fx-border-width: 0 0 1px 0;
+    -fx-border-color: #eceff1; /* Línea separadora muy sutil */
+    -fx-cell-size: 40px; /* Filas más altas y cómodas */
+}
+
+/* Celdas individuales */
+.table-cell {
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 0 0 0 10;
+    -fx-text-fill: #333333;
+}
+
+/* Efecto Zebra (Filas pares e impares) */
+.table-row-cell:odd {
+    -fx-background-color: #fafafa; /* Gris casi blanco */
+}
+
+/* Hover (Cuando pasas el mouse por encima) */
+.table-row-cell:hover {
+    -fx-background-color: #e3f2fd; /* Azul muy clarito */
+    -fx-cursor: hand;
+}
+
+/* Selección (Cuando le das click) */
+.table-row-cell:selected {
+    -fx-background-color: #2196F3; /* Azul Material */
+}
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: white;
+}
+.table-row-cell:selected .text {
+    -fx-fill: white;
+}
+
+/* Mensaje cuando la tabla está vacía */
+.table-view .placeholder .label {
+    -fx-text-fill: #b0bec5;
+    -fx-font-size: 16px;
+}
+
+/* --- TARJETA DE FORMULARIO --- */
+.card-pane {
+    -fx-background-color: white;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    /* Sombra suave para dar efecto de elevación */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 15, 0, 0, 5); 
+    -fx-padding: 30;
+}
+
+/* Alineación de etiquetas en el formulario */
+.form-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #37474f;
+    -fx-font-size: 14px;
+}

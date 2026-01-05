@@ -16,6 +16,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Optional;
 
 public class ListadoController {
@@ -24,34 +25,42 @@ public class ListadoController {
     @FXML private TableColumn<Persona, String> colNombre;
     @FXML private TableColumn<Persona, String> colDni;
     @FXML private TableColumn<Persona, String> colEmail;
+    @FXML private TableColumn<Persona, String> colTelefono; // <--- NUEVO
 
     private final PersonaRepository repo = new PersonaRepository();
 
     @FXML
     public void initialize() {
+        // Configuramos qué propiedad del objeto Persona va en cada columna
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
         colDni.setCellValueFactory(new PropertyValueFactory<>("dni"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono")); // <--- NUEVO
+
         cargarDatos();
     }
 
     public void cargarDatos() {
-        tabla.setItems(FXCollections.observableArrayList(repo.listarTodos()));
+        try {
+            tabla.setItems(FXCollections.observableArrayList(repo.listarTodos()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     public void irAFormulario(ActionEvent event) {
-        navegarAFormulario(event, null); // Null = Crear Nuevo
+        navegarAFormulario(event, null);
     }
 
     @FXML
     public void editarPersona(ActionEvent event) {
         Persona seleccionada = tabla.getSelectionModel().getSelectedItem();
         if (seleccionada == null) {
-            mostrarAlerta(Alert.AlertType.WARNING, "Atención", "Seleccioná a alguien de la lista para editar.");
+            mostrarAlerta(Alert.AlertType.WARNING, "Atención", "Seleccioná a alguien para editar.");
             return;
         }
-        navegarAFormulario(event, seleccionada); // Pasamos la persona para editar
+        navegarAFormulario(event, seleccionada);
     }
 
     @FXML
@@ -63,7 +72,7 @@ public class ListadoController {
         }
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmar eliminación");
+        confirm.setTitle("Confirmar");
         confirm.setHeaderText(null);
         confirm.setContentText("¿Borrar a " + seleccionada.getNombreCompleto() + "?");
 
@@ -76,11 +85,17 @@ public class ListadoController {
 
     private void navegarAFormulario(ActionEvent event, Persona p) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/formulario_persona.fxml"));
+            URL url = getClass().getResource("/vista/formulario_persona.fxml");
+            
+            if (url == null) {
+                System.err.println("ERROR CRÍTICO: No encuentro el archivo '/vista/formulario_persona.fxml'");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
             Parent root = loader.load();
 
             if (p != null) {
-                // Si estamos editando, le pasamos los datos al otro controlador
                 PersonaControlador controller = loader.getController();
                 controller.setPersona(p);
             }
@@ -88,6 +103,7 @@ public class ListadoController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
+
         } catch (IOException e) {
             e.printStackTrace();
         }

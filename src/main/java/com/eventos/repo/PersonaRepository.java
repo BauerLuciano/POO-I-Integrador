@@ -1,7 +1,5 @@
 package com.eventos.repo;
 
-import java.util.List;
-
 import com.eventos.modelo.Persona;
 import com.eventos.util.JPAUtil;
 import jakarta.persistence.EntityManager;
@@ -63,15 +61,6 @@ public class PersonaRepository {
                      .getSingleResult();
         } catch (NoResultException e) {
             return null; 
-        } finally {
-            em.close();
-        }
-    }
-
-    public List<Persona> listarTodos() {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            return em.createQuery("SELECT p FROM Persona p", Persona.class).getResultList();
         } finally {
             em.close();
         }

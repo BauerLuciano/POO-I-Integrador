@@ -1,6 +1,5 @@
 package com.eventos;
 
-// --- IMPORTS OBLIGATORIOS (Sin esto Java no encuentra las clases) ---
 import com.eventos.modelo.Taller;
 import com.eventos.modelo.Concierto;
 import com.eventos.modelo.Persona;

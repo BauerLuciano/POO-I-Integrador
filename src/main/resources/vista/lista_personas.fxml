@@ -26,8 +26,14 @@
         <columns>
             <TableColumn fx:id="colNombre" text="Nombre Completo" prefWidth="250"/>
             <TableColumn fx:id="colDni" text="DNI" prefWidth="120"/>
-            <TableColumn fx:id="colEmail" text="Email" prefWidth="250"/>
+            <TableColumn fx:id="colEmail" text="Email" prefWidth="200"/>
+            <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="150"/>
         </columns>
+        
+        <placeholder>
+            <Label text="No hay personas registradas en el sistema."/>
+        </placeholder>
+
         <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
         </columnResizePolicy>

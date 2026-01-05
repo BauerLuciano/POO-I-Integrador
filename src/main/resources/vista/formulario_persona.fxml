@@ -4,32 +4,42 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="20" alignment="CENTER" 
+<VBox spacing="0" alignment="CENTER" 
       xmlns="http://javafx.com/javafx/21" 
       xmlns:fx="http://javafx.com/fxml/1" 
       fx:controller="com.eventos.controlador.PersonaControlador" 
-      stylesheets="@../estilos.css"> 
+      stylesheets="@../estilos.css"
+      style="-fx-background-color: #f4f6f8;"> <VBox spacing="25" alignment="CENTER" styleClass="card-pane" maxWidth="500">
+        
+        <Label fx:id="lblTitulo" text="Datos de la Persona" styleClass="label-titulo"/>
 
-    <Label fx:id="lblTitulo" text="Datos de la Persona" styleClass="label-titulo"/>
+        <GridPane vgap="15" hgap="15" alignment="CENTER">
+            <columnConstraints>
+                <ColumnConstraints halignment="RIGHT" minWidth="120"/>
+                <ColumnConstraints hgrow="ALWAYS"/>
+            </columnConstraints>
 
-    <GridPane vgap="15" hgap="15" alignment="CENTER">
-        <Label text="Nombre Completo:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <TextField fx:id="txtNombre" promptText="Ej: Lionel Messi" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="300"/>
+            <Label text="Nombre Completo:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="form-label"/>
+            <TextField fx:id="txtNombre" promptText="Ej: Diego Maradona" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="250"/>
 
-        <Label text="DNI:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="txtDni" promptText="Sin puntos" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Label text="DNI:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="form-label"/>
+            <TextField fx:id="txtDni" promptText="Sin puntos (8 dígitos)" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-        <Label text="Email:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextField fx:id="txtEmail" promptText="lio@mail.com" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            <Label text="Email:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="form-label"/>
+            <TextField fx:id="txtEmail" promptText="usuario@mail.com" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Label text="Teléfono:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="txtTelefono" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-    </GridPane>
+            <Label text="Teléfono:" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="form-label"/>
+            <TextField fx:id="txtTelefono" promptText="Sólo números" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        </GridPane>
 
-    <HBox spacing="15" alignment="CENTER">
-        <Button text="Volver" onAction="#volverALista" styleClass="button, btn-secondary"/>
-        <Button text="Limpiar" onAction="#limpiarFormulario" styleClass="button, btn-secondary"/>
-        <Button text="Guardar" onAction="#guardarPersona" styleClass="button, btn-primary"/>
-    </HBox>
+        <Separator/>
+
+        <HBox spacing="15" alignment="CENTER">
+            <Button text="Volver" onAction="#volverALista" styleClass="button, btn-secondary"/>
+            <Button text="Limpiar" onAction="#limpiarFormulario" styleClass="button, btn-secondary"/>
+            <Button text="Guardar Datos" onAction="#guardarPersona" styleClass="button, btn-primary" prefWidth="150"/>
+        </HBox>
+        
+    </VBox>
     
 </VBox>

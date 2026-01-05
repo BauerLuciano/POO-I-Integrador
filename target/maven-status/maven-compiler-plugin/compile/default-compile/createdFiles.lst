@@ -7,8 +7,10 @@ com\eventos\modelo\Evento.class
 com\eventos\MainTest.class
 com\eventos\modelo\Taller.class
 com\eventos\repo\PersonaRepository.class
+com\eventos\controlador\ListadoController.class
 com\eventos\enums\EstadoEvento.class
 com\eventos\modelo\Pelicula.class
+com\eventos\controlador\PersonaControlador.class
 com\eventos\App.class
 com\eventos\repo\EventoRepository.class
 com\eventos\interfaz\Inscribible.class
