@@ -17,7 +17,7 @@ El sistema resuelve la necesidad del municipio de organizar su agenda cultural. 
 * **Lenguaje:** Java (JDK 17+ recomendado).
 * **Interfaz Gráfica (GUI):** JavaFX.
 * **Persistencia:** JPA (Java Persistence API) / Hibernate.
-* **Base de Datos:** (Especificar aquí: MySQL / H2 / PostgreSQL).
+* **Base de Datos:** (PostgreSQL).
 
 ##  Arquitectura
 El proyecto sigue un diseño orientado a objetos utilizando **herencia y polimorfismo** para los tipos de eventos, y una arquitectura en capas (Modelo-Vista-Controlador) para separar la lógica de negocio de la interfaz gráfica
