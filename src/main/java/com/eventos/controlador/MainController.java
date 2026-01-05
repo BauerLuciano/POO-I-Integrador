@@ -1,7 +1,9 @@
 package com.eventos.controlador;
 
+import com.eventos.modelo.CicloCine;
+import com.eventos.modelo.Pelicula;
 import com.eventos.modelo.Evento;
-import com.eventos.modelo.Taller; // Importante para validar si es taller
+import com.eventos.modelo.Taller; // Necesario para validar inscripción
 import com.eventos.repo.EventoRepository;
 import com.eventos.repo.EventoRepositoryImpl;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,23 +14,27 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+// --- IMPORTS CRÍTICOS PARA LA TABLA (JAVAFX) ---
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+// -----------------------------------------------
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class MainController {
 
     // --- TABLA Y COLUMNAS ---
     @FXML private TableView<Evento> tablaEventos;
     @FXML private TableColumn<Evento, Long> colId;
-    @FXML private TableColumn<Evento, String> colNombre;
-    @FXML private TableColumn<Evento, LocalDateTime> colFecha;
-    @FXML private TableColumn<Evento, String> colEstado;
     @FXML private TableColumn<Evento, String> colTipo;
+    @FXML private TableColumn<Evento, String> colNombre;
+    @FXML private TableColumn<Evento, LocalDateTime> colFecha; // Ojo: es LocalDateTime
+    @FXML private TableColumn<Evento, String> colEstado;
 
     private EventoRepository repo = new EventoRepositoryImpl();
 
@@ -39,31 +45,49 @@ public class MainController {
     }
 
     private void configurarColumnas() {
-        // Enlazamos las columnas con los atributos de la clase Evento
+        // 1. Enlazamos las columnas con los atributos del modelo
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
-        colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaInicio"));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        // Truco para mostrar el TIPO de clase (Taller, Concierto, etc.)
+        // 2. Truco para mostrar el TIPO de evento (Nombre de la Clase)
         colTipo.setCellValueFactory(cellData -> 
             new SimpleStringProperty(cellData.getValue().getClass().getSimpleName())
         );
+
+        // 3. CONFIGURACIÓN ESPECIAL DE FECHA (Para que se vea linda)
+        colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaInicio"));
+        
+        // Formateador: Día/Mes/Año Hora:Minutos
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        colFecha.setCellFactory(columna -> new TableCell<Evento, LocalDateTime>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    // Acá convertimos la fecha fea a texto lindo
+                    setText(item.format(formato));
+                }
+            }
+        });
     }
 
     @FXML
     public void cargarEventos() {
         try {
             tablaEventos.getItems().clear();
-            // Traemos todo de la base de datos
             ObservableList<Evento> lista = FXCollections.observableArrayList(repo.listarTodos());
             tablaEventos.setItems(lista);
         } catch (Exception e) {
+            e.printStackTrace(); // Para ver el error en la consola
             mostrarAlerta("Error", "No se pudo cargar la lista: " + e.getMessage());
         }
     }
 
-    // --- ABRIR ALTA DE EVENTO (Polimórfica) ---
+    // --- ABRIR ALTA DE EVENTO ---
     @FXML
     public void abrirNuevoEvento() {
         try {
@@ -73,7 +97,7 @@ public class MainController {
             Stage stage = new Stage();
             stage.setTitle("Alta de Nuevo Evento");
             stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL); // Bloquea la ventana de atrás
+            stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
 
             cargarEventos(); // Refrescar al volver
@@ -84,40 +108,65 @@ public class MainController {
         }
     }
 
-    // --- NUEVO: ABRIR INSCRIPCIÓN (Solo para Talleres) ---
+    // --- ABRIR EDICIÓN DE EVENTO ---
     @FXML
-    public void abrirInscripcion() {
-        // 1. Obtener el evento seleccionado en la tabla
+    public void editarEvento() {
         Evento seleccionado = tablaEventos.getSelectionModel().getSelectedItem();
-        
         if (seleccionado == null) {
-            mostrarAlerta("Atención", "Seleccioná un evento de la lista primero.");
+            mostrarAlerta("Atención", "Seleccioná un evento para editar.");
             return;
         }
 
-        // 2. Validar que sea un Taller (Polimorfismo: instanceof)
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/evento.fxml"));
+            Parent root = loader.load();
+
+            // Pasamos el evento seleccionado al controlador
+            EventoController controller = loader.getController();
+            controller.initData(seleccionado); 
+
+            Stage stage = new Stage();
+            stage.setTitle("Editar Evento");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
+
+            cargarEventos(); // Refrescar
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            mostrarAlerta("Error", "No se pudo abrir la edición: " + e.getMessage());
+        }
+    }
+
+    // --- ABRIR INSCRIPCIÓN (Solo Talleres) ---
+    @FXML
+    public void abrirInscripcion() {
+        Evento seleccionado = tablaEventos.getSelectionModel().getSelectedItem();
+        
+        if (seleccionado == null) {
+            mostrarAlerta("Atención", "Seleccioná un evento primero.");
+            return;
+        }
+
         if (!(seleccionado instanceof Taller)) {
             mostrarAlerta("Acción no válida", "La inscripción solo está disponible para Talleres.\nEl evento seleccionado es un: " + seleccionado.getClass().getSimpleName());
             return;
         }
 
         try {
-            // 3. Cargar el FXML de Inscripción
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/inscripcion.fxml"));
             Parent root = loader.load();
 
-            // 4. Pasar los datos al controlador de inscripción
             InscripcionController controller = loader.getController();
-            controller.initData((Taller) seleccionado); // Le pasamos el taller elegido
+            controller.initData((Taller) seleccionado);
 
-            // 5. Mostrar ventana modal
             Stage stage = new Stage();
             stage.setTitle("Inscripción a Taller");
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.showAndWait();
             
-            // Refrescar tabla al volver (por si cambió el estado/cupo)
             cargarEventos();
 
         } catch (Exception e) {
@@ -126,6 +175,7 @@ public class MainController {
         }
     }
 
+    // --- ELIMINAR EVENTO ---
     @FXML
     public void eliminarEvento() {
         Evento seleccionado = tablaEventos.getSelectionModel().getSelectedItem();
@@ -150,33 +200,32 @@ public class MainController {
         alert.showAndWait();
     }
 
-	@FXML
-    public void editarEvento() {
-        Evento seleccionado = tablaEventos.getSelectionModel().getSelectedItem();
-        if (seleccionado == null) {
-            mostrarAlerta("Atención", "Seleccioná un evento para editar.");
-            return;
-        }
+    // Importar CicloCine arriba
+@FXML
+public void abrirPeliculas() {
+    Evento seleccionado = tablaEventos.getSelectionModel().getSelectedItem();
 
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/evento.fxml"));
-            Parent root = loader.load();
-
-            // PASO CLAVE: Obtener el controlador y pasarle el evento
-            EventoController controller = loader.getController();
-            controller.initData(seleccionado); 
-
-            Stage stage = new Stage();
-            stage.setTitle("Editar Evento");
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.showAndWait();
-
-            cargarEventos(); // Refrescar la tabla al volver
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            mostrarAlerta("Error", "No se pudo abrir la edición: " + e.getMessage());
-        }
+    if (seleccionado == null || !(seleccionado instanceof CicloCine)) {
+        mostrarAlerta("Atención", "Seleccioná un evento de tipo 'Ciclo de Cine'.");
+        return;
     }
+
+    try {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/peliculas.fxml"));
+        Parent root = loader.load();
+
+        PeliculasController controller = loader.getController();
+        controller.initData((CicloCine) seleccionado);
+
+        Stage stage = new Stage();
+        stage.setTitle("Gestión de Películas");
+        stage.setScene(new Scene(root));
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.showAndWait();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        mostrarAlerta("Error", e.getMessage());
+    }
+}
 }

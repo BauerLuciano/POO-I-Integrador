@@ -6,7 +6,6 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -14,7 +13,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Stage;
+import javafx.stage.Modality; // IMPORTANTE
+import javafx.stage.Stage;    // IMPORTANTE
 import java.io.IOException;
 import java.util.Optional;
 
@@ -36,12 +36,17 @@ public class ListadoController {
     }
 
     public void cargarDatos() {
-        tabla.setItems(FXCollections.observableArrayList(repo.listarTodos()));
+        try {
+            tabla.setItems(FXCollections.observableArrayList(repo.listarTodos()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     public void irAFormulario(ActionEvent event) {
-        navegarAFormulario(event, null); // Null = Crear Nuevo
+        // Pasamos null porque es una persona NUEVA
+        abrirVentanaModal(null); 
     }
 
     @FXML
@@ -51,7 +56,43 @@ public class ListadoController {
             mostrarAlerta(Alert.AlertType.WARNING, "Atención", "Seleccioná a alguien de la lista para editar.");
             return;
         }
-        navegarAFormulario(event, seleccionada); // Pasamos la persona para editar
+        // Pasamos la persona seleccionada para EDITAR
+        abrirVentanaModal(seleccionada); 
+    }
+
+    // --- MÉTODO CORREGIDO: ABRE UNA VENTANA FLOTANTE ---
+    private void abrirVentanaModal(Persona p) {
+        try {
+            // IMPORTANTE: Chequeá que el nombre del archivo sea el correcto. 
+            // En tu código dice "formulario_persona.fxml", pero antes usábamos "persona.fxml"
+            // Si te tira error, cambiá el nombre acá abajo:
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/formulario_persona.fxml")); 
+            Parent root = loader.load();
+
+            if (p != null) {
+                // Si estamos editando, pasamos los datos
+                PersonaControlador controller = loader.getController();
+                controller.setPersona(p);
+            }
+
+            // CREAMOS UNA VENTANA NUEVA (NO reemplazamos la actual)
+            Stage stage = new Stage();
+            stage.setTitle(p == null ? "Nueva Persona" : "Editar Persona");
+            stage.setScene(new Scene(root));
+            
+            // MODALIDAD: Bloquea la ventana de atrás hasta que cierres esta
+            stage.initModality(Modality.APPLICATION_MODAL);
+            
+            // Esperamos a que se cierre para seguir
+            stage.showAndWait();
+
+            // AL VOLVER: Refrescamos la tabla automáticamente
+            cargarDatos();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            mostrarAlerta(Alert.AlertType.ERROR, "Error", "No se pudo abrir la ventana: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -71,25 +112,6 @@ public class ListadoController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             repo.eliminar(seleccionada.getId());
             cargarDatos();
-        }
-    }
-
-    private void navegarAFormulario(ActionEvent event, Persona p) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/formulario_persona.fxml"));
-            Parent root = loader.load();
-
-            if (p != null) {
-                // Si estamos editando, le pasamos los datos al otro controlador
-                PersonaControlador controller = loader.getController();
-                controller.setPersona(p);
-            }
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

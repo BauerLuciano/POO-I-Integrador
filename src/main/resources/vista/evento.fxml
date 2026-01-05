@@ -40,6 +40,10 @@
                 <DatePicker fx:id="dpFecha" />
             </VBox>
             <VBox>
+                <Label text="Hora (HH:mm):" />
+                <TextField fx:id="txtHora" prefWidth="80.0" promptText="18:00" text="18:00"/>
+            </VBox>
+            <VBox>
                 <Label text="Duración (min):" />
                 <TextField fx:id="txtDuracion" prefWidth="80.0" text="60"/>
             </VBox>

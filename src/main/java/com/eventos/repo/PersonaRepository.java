@@ -54,7 +54,6 @@ public class PersonaRepository {
         }
     }
 
-    // 4. BUSCAR POR DNI (¡ESTE ERA EL QUE FALTABA Y ROMPÍA TODO!)
     public Persona buscarPorDni(String dni) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
@@ -63,15 +62,6 @@ public class PersonaRepository {
                      .getSingleResult();
         } catch (NoResultException e) {
             return null; 
-        } finally {
-            em.close();
-        }
-    }
-
-    public List<Persona> listarTodos() {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            return em.createQuery("SELECT p FROM Persona p", Persona.class).getResultList();
         } finally {
             em.close();
         }

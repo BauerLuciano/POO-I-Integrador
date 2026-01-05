@@ -4,15 +4,11 @@ import com.eventos.modelo.Persona;
 import com.eventos.repo.PersonaRepository;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import java.io.IOException;
 
 public class PersonaControlador {
 
@@ -23,9 +19,8 @@ public class PersonaControlador {
     @FXML private Label lblTitulo;
 
     private final PersonaRepository personaRepo = new PersonaRepository();
-    private Persona personaActual; // Objeto temporal para saber si editamos
+    private Persona personaActual;
 
-    // Método para recibir datos desde el Listado
     public void setPersona(Persona p) {
         this.personaActual = p;
         lblTitulo.setText("Editar Persona: " + p.getNombreCompleto());
@@ -47,18 +42,19 @@ public class PersonaControlador {
 
         try {
             if (personaActual == null) {
-                personaActual = new Persona(); // Es NUEVO
+                personaActual = new Persona();
             }
             
-            // Actualizamos el objeto con lo que haya en los textfields
             personaActual.setNombreCompleto(nombre);
             personaActual.setDni(dni);
             personaActual.setEmail(txtEmail.getText());
             personaActual.setTelefono(txtTelefono.getText());
 
-            personaRepo.guardar(personaActual); // El repo decide si INSERT o UPDATE
+            personaRepo.guardar(personaActual);
 
             mostrarAlerta(Alert.AlertType.INFORMATION, "Éxito", "Guardado correctamente.");
+            
+            // Llamamos al método corregido
             volverALista(event);
 
         } catch (Exception e) {
@@ -67,17 +63,14 @@ public class PersonaControlador {
         }
     }
 
+    // --- ACÁ ESTÁ EL CAMBIO IMPORTANTE ---
     @FXML
     public void volverALista(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/vista/lista_personas.fxml"));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // En lugar de cargar un FXML nuevo, solo cerramos la ventana actual.
+        // Al cerrarse, se ve la ventana de atrás (la de pestañas) que sigue abierta.
+        Node source = (Node) event.getSource();
+        Stage stage = (Stage) source.getScene().getWindow();
+        stage.close();
     }
 
     @FXML

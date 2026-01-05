@@ -14,15 +14,15 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         // CAMBIO TEMPORAL: Apuntamos directo a tu formulario para probarlo
         // Antes decía: scene = new Scene(loadFXML("main"), 900, 600);
-        scene = new Scene(loadFXML("formulario_persona"), 600, 500); 
+        scene = new Scene(loadFXML("main.fxml"), 900, 700); 
         
-        stage.setTitle("Listado de Personas");
+        stage.setTitle("Trabajo Práctico Integrador - POO1 2026");
         stage.setScene(scene);
         stage.show();
     }
 
     public static Parent loadFXML(String fxml) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/vista/lista_personas.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("/vista/main.fxml"));
         return fxmlLoader.load();
     }
 

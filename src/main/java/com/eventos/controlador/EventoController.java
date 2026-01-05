@@ -12,7 +12,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 
 public class EventoController {
 
@@ -20,11 +21,15 @@ public class EventoController {
     @FXML private ComboBox<String> comboTipo;
     @FXML private ComboBox<EstadoEvento> comboEstado;
     @FXML private TextField txtNombre;
+    
+    // FECHA Y HORA
     @FXML private DatePicker dpFecha;
+    @FXML private TextField txtHora; // <--- NUEVO CAMPO
+    
     @FXML private TextField txtDuracion;
     @FXML private ComboBox<Persona> comboOrganizador;
 
-    // --- PANELES ---
+    // --- PANELES ESPECÍFICOS ---
     @FXML private VBox panelTaller;
     @FXML private VBox panelConcierto;
     @FXML private VBox panelFeria;
@@ -45,11 +50,11 @@ public class EventoController {
     @FXML private TextField txtStands;
     @FXML private CheckBox chkAireLibre;
     
-    // Exposicion (NUEVOS)
+    // Exposicion
     @FXML private TextField txtTipoArte;
     @FXML private ComboBox<Persona> comboCurador;
     
-    // Ciclo Cine (NUEVOS)
+    // Ciclo Cine
     @FXML private CheckBox chkHayCharlas;
 
     // --- REPOSITORIOS ---
@@ -60,13 +65,13 @@ public class EventoController {
 
     @FXML
     public void initialize() {
-        // 1. Cargar Combos Estáticos (AHORA CON LOS 5 TIPOS)
+        // 1. Cargar Combos
         comboTipo.getItems().addAll("Taller", "Concierto", "Feria", "Exposicion", "CicloCine");
         comboModalidad.getItems().addAll(Modalidad.values());
         comboTipoEntrada.getItems().addAll(TipoEntrada.values());
         comboEstado.getItems().addAll(EstadoEvento.values());
 
-        // 2. Cargar Personas (llenamos todos los combos de gente)
+        // 2. Cargar Personas
         try {
             var personas = personaRepo.listarTodos();
             comboOrganizador.getItems().addAll(personas);
@@ -81,7 +86,7 @@ public class EventoController {
     // --- MOSTRAR PANELES SEGÚN TIPO ---
     @FXML
     public void onTipoChange() {
-        if (eventoEnEdicion != null) return; // Si editamos, no dejamos cambiar tipo
+        if (eventoEnEdicion != null) return; // Bloquear si editamos
         
         ocultarPaneles();
         String tipo = comboTipo.getValue();
@@ -111,7 +116,13 @@ public class EventoController {
         
         // Datos comunes
         txtNombre.setText(evento.getNombre());
-        if (evento.getFechaInicio() != null) dpFecha.setValue(evento.getFechaInicio().toLocalDate());
+        
+        // Cargar Fecha y Hora separadas
+        if (evento.getFechaInicio() != null) {
+            dpFecha.setValue(evento.getFechaInicio().toLocalDate());
+            txtHora.setText(evento.getFechaInicio().toLocalTime().toString()); // Mostramos la hora
+        }
+        
         txtDuracion.setText(String.valueOf(evento.getDuracionEstimada()));
         comboEstado.setValue(evento.getEstado());
         
@@ -119,9 +130,9 @@ public class EventoController {
             comboOrganizador.setValue(evento.getOrganizadores().get(0));
         }
 
-        comboTipo.setDisable(true); // Bloqueamos el tipo
+        comboTipo.setDisable(true); // Bloquear tipo
 
-        // Cargar específicos (Polimorfismo)
+        // Cargar específicos
         if (evento instanceof Taller) {
             comboTipo.setValue("Taller");
             Taller t = (Taller) evento;
@@ -163,12 +174,14 @@ public class EventoController {
     @FXML
     public void guardarEvento() {
         try {
+            // Validaciones básicas
             if (txtNombre.getText().isEmpty()) throw new RuntimeException("El nombre es obligatorio");
             if (dpFecha.getValue() == null) throw new RuntimeException("La fecha es obligatoria");
+            if (txtHora.getText().isEmpty()) throw new RuntimeException("La hora es obligatoria");
 
             Evento eventoFinal;
 
-            // 1. Instanciación o Reutilización
+            // 1. Instanciación
             if (eventoEnEdicion != null) {
                 eventoFinal = eventoEnEdicion;
                 eventoFinal.setEstado(comboEstado.getValue());
@@ -189,7 +202,17 @@ public class EventoController {
 
             // 2. Setear Datos Comunes
             eventoFinal.setNombre(txtNombre.getText());
-            eventoFinal.setFechaInicio(dpFecha.getValue().atStartOfDay());
+
+            // --- MANEJO DE FECHA Y HORA ---
+            try {
+                // Parseamos la hora (ej: "18:30" o "18:30:00")
+                LocalTime hora = LocalTime.parse(txtHora.getText());
+                // Unimos Fecha + Hora
+                eventoFinal.setFechaInicio(dpFecha.getValue().atTime(hora));
+            } catch (DateTimeParseException e) {
+                throw new RuntimeException("Formato de hora inválido. Use HH:mm (Ej: 18:30)");
+            }
+
             try {
                 eventoFinal.setDuracionEstimada(Integer.parseInt(txtDuracion.getText()));
             } catch (Exception e) { eventoFinal.setDuracionEstimada(60); }
@@ -221,7 +244,7 @@ public class EventoController {
                 cc.setHayCharlas(chkHayCharlas.isSelected());
             }
 
-            // 4. Guardar en BD
+            // 4. Guardar
             if (eventoEnEdicion != null) {
                 eventoRepo.actualizar(eventoFinal);
             } else {
@@ -239,7 +262,8 @@ public class EventoController {
     }
 
     @FXML public void cerrarVentana() {
-        Stage s = (Stage) txtNombre.getScene().getWindow(); s.close();
+        Stage s = (Stage) txtNombre.getScene().getWindow(); 
+        s.close();
     }
     
     private void mostrarAlerta(String t, String m) {
