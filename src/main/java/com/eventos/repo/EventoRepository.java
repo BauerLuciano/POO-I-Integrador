@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface EventoRepository {
     void guardar(Evento evento);
-    void actualizar(Evento evento);
+    Evento actualizar(Evento evento);   
     void eliminar(Long id);
     Evento buscarPorId(Long id);
     List<Evento> listarTodos();

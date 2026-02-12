@@ -18,11 +18,18 @@
         <Label fx:id="lblCicloNombre" text="Películas del Ciclo">
             <font><Font name="System Bold" size="16.0" /></font>
         </Label>
+        
         <ListView fx:id="listaPeliculas" prefHeight="300.0" prefWidth="250.0" />
-        <Button text="Eliminar Seleccionada" onAction="#eliminarPelicula" style="-fx-background-color: #ff4444; -fx-text-fill: white;"/>
+        
+        <HBox alignment="CENTER_LEFT" spacing="5.0" style="-fx-background-color: #f4f4f4; -fx-padding: 5; -fx-background-radius: 5;">
+            <Label text="Duración Total:" style="-fx-font-weight: bold;" />
+            <Label fx:id="lblTotalDuracion" text="0 min" style="-fx-text-fill: #2c3e50; -fx-font-weight: bold;" />
+        </HBox>
+
+        <Button text="Eliminar Seleccionada" onAction="#eliminarPelicula" maxWidth="Infinity" style="-fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
     </VBox>
 
-    <VBox spacing="10.0" style="-fx-border-color: #ccc; -fx-padding: 10; -fx-border-radius: 5;">
+    <VBox spacing="10.0" style="-fx-border-color: #ccc; -fx-padding: 10; -fx-border-radius: 5;" prefWidth="200.0">
         <Label text="Agregar Nueva Película" style="-fx-font-weight: bold;"/>
         
         <Label text="Título:" />
@@ -34,7 +41,6 @@
         <Label text="Duración (minutos):" />
         <TextField fx:id="txtDuracion" prefWidth="80.0" promptText="Ej: 120"/>
         
-        <Button text="Agregar al Ciclo" onAction="#agregarPelicula" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        <Button text="Agregar al Ciclo" onAction="#agregarPelicula" maxWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
     </VBox>
-
 </HBox>

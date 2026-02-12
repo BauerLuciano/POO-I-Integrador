@@ -12,24 +12,25 @@ public class EventoRepositoryImpl implements EventoRepository {
     public void guardar(Evento evento) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            em.getTransaction().begin(); // Iniciamos transacción
-            em.persist(evento);          // Guardamos
-            em.getTransaction().commit(); // Confirmamos cambios
+            em.getTransaction().begin();
+            em.persist(evento);
+            em.getTransaction().commit();
         } catch (Exception e) {
-            em.getTransaction().rollback(); // Si falla, deshacemos
+            em.getTransaction().rollback();
             throw e;
         } finally {
-            em.close(); // Siempre cerramos el manager
+            em.close();
         }
     }
-    
+
     @Override
-    public void actualizar(Evento evento) {
+    public Evento actualizar(Evento evento) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            em.merge(evento); // Merge actualiza un objeto existente
+            Evento managed = em.merge(evento);
             em.getTransaction().commit();
+            return managed;   // 👈 DEVOLVEMOS LA GESTIONADA
         } catch (Exception e) {
             em.getTransaction().rollback();
             throw e;
@@ -52,7 +53,6 @@ public class EventoRepositoryImpl implements EventoRepository {
     public List<Evento> listarTodos() {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // JPQL: Consultamos objetos, no tablas
             return em.createQuery("SELECT e FROM Evento e", Evento.class).getResultList();
         } finally {
             em.close();
@@ -70,7 +70,7 @@ public class EventoRepositoryImpl implements EventoRepository {
             em.close();
         }
     }
-    
+
     @Override
     public void eliminar(Long id) {
         EntityManager em = JPAUtil.getEntityManager();

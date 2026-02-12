@@ -1,8 +1,7 @@
 package com.eventos.modelo;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "ciclos_cine")
@@ -12,24 +11,32 @@ public class CicloCine extends Evento {
     @Column(name = "hay_charlas")
     private boolean hayCharlas;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "ciclo_id") 
+    @OneToMany(mappedBy = "ciclo", cascade = CascadeType.ALL,
+               fetch = FetchType.EAGER, orphanRemoval = true)
     private List<Pelicula> peliculas = new ArrayList<>();
 
-    public CicloCine() { super(); }
+    public CicloCine() {
+        super();
+    }
 
     public boolean isHayCharlas() { return hayCharlas; }
     public void setHayCharlas(boolean hayCharlas) { this.hayCharlas = hayCharlas; }
 
-    // Getter para la lista
-    public List<Pelicula> getPeliculas() { return peliculas; }
-    
-    // Método helper para agregar fácil
-    public void agregarPelicula(Pelicula p) {
-        this.peliculas.add(p);
+    public List<Pelicula> getPeliculas() {
+        return peliculas;  // devolvemos la lista directamente
     }
-    
+
+    public void agregarPelicula(Pelicula p) {
+        if (p != null && !peliculas.contains(p)) {
+            peliculas.add(p);
+            p.setCiclo(this);
+        }
+    }
+
     public void eliminarPelicula(Pelicula p) {
-        this.peliculas.remove(p);
+        if (p != null) {
+            peliculas.remove(p);
+            p.setCiclo(null);
+        }
     }
 }

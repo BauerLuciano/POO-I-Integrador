@@ -1,8 +1,6 @@
 package com.eventos.controlador;
 
-import com.eventos.enums.EstadoEvento;
-import com.eventos.enums.Modalidad;
-import com.eventos.enums.TipoEntrada;
+import com.eventos.enums.*;
 import com.eventos.modelo.*;
 import com.eventos.repo.EventoRepository;
 import com.eventos.repo.EventoRepositoryImpl;
@@ -11,270 +9,143 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class EventoController {
 
-    // --- CONTROLES COMUNES ---
     @FXML private ComboBox<String> comboTipo;
     @FXML private ComboBox<EstadoEvento> comboEstado;
-    @FXML private TextField txtNombre;
-    
-    // FECHA Y HORA
+    @FXML private TextField txtNombre, txtHora, txtDuracion;
     @FXML private DatePicker dpFecha;
-    @FXML private TextField txtHora; // <--- NUEVO CAMPO
-    
-    @FXML private TextField txtDuracion;
-    @FXML private ComboBox<Persona> comboOrganizador;
-
-    // --- PANELES ESPECÍFICOS ---
-    @FXML private VBox panelTaller;
-    @FXML private VBox panelConcierto;
-    @FXML private VBox panelFeria;
-    @FXML private VBox panelExposicion;
-    @FXML private VBox panelCicloCine;
-
-    // --- CONTROLES ESPECÍFICOS ---
-    // Taller
-    @FXML private TextField txtCupo;
+    @FXML private ComboBox<Persona> comboOrganizador, comboInstructor, comboArtista, comboCurador;
+    @FXML private VBox panelTaller, panelConcierto, panelFeria, panelExposicion, panelCicloCine;
+    @FXML private TextField txtCupo, txtStands, txtTipoArte;
     @FXML private ComboBox<Modalidad> comboModalidad;
-    @FXML private ComboBox<Persona> comboInstructor;
-    
-    // Concierto
     @FXML private ComboBox<TipoEntrada> comboTipoEntrada;
-    @FXML private ComboBox<Persona> comboArtista;
-    
-    // Feria
-    @FXML private TextField txtStands;
     @FXML private ComboBox<String> comboUbicacionFeria;
-    
-    // Exposicion
-    @FXML private TextField txtTipoArte;
-    @FXML private ComboBox<Persona> comboCurador;
-    
-    // Ciclo Cine
     @FXML private CheckBox chkHayCharlas;
 
-    // --- REPOSITORIOS ---
-    private EventoRepository eventoRepo = new EventoRepositoryImpl();
-    private PersonaRepository personaRepo = new PersonaRepository();
-    
+    private final EventoRepository eventoRepo = new EventoRepositoryImpl();
+    private final PersonaRepository personaRepo = new PersonaRepository();
     private Evento eventoEnEdicion;
 
     @FXML
     public void initialize() {
-        // 1. Cargar Combos
         comboTipo.getItems().addAll("Taller", "Concierto", "Feria", "Exposicion", "CicloCine");
         comboUbicacionFeria.getItems().addAll("Es al aire libre", "Techado");
-        comboModalidad.getItems().addAll(Modalidad.values());
-        comboTipoEntrada.getItems().addAll(TipoEntrada.values());
-        comboEstado.getItems().addAll(EstadoEvento.values());
-
-        // 2. Cargar Personas
-        try {
-            var personas = personaRepo.listarTodos();
-            comboOrganizador.getItems().addAll(personas);
-            comboInstructor.getItems().addAll(personas);
-            comboArtista.getItems().addAll(personas);
-            comboCurador.getItems().addAll(personas);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // --- MOSTRAR PANELES SEGÚN TIPO ---
-    @FXML
-    public void onTipoChange() {
-        if (eventoEnEdicion != null) return; // Bloquear si editamos
+        comboModalidad.getItems().setAll(Modalidad.values());
+        comboTipoEntrada.getItems().setAll(TipoEntrada.values());
+        comboEstado.getItems().setAll(EstadoEvento.values());
         
-        ocultarPaneles();
-        String tipo = comboTipo.getValue();
-        
-        if ("Taller".equals(tipo)) mostrarPanel(panelTaller);
-        if ("Concierto".equals(tipo)) mostrarPanel(panelConcierto);
-        if ("Feria".equals(tipo)) mostrarPanel(panelFeria);
-        if ("Exposicion".equals(tipo)) mostrarPanel(panelExposicion);
-        if ("CicloCine".equals(tipo)) mostrarPanel(panelCicloCine);
+        actualizarCombosPersonas();
+
+        // --- FIX DATEPICKER: Bloquear fechas pasadas ---
+        dpFecha.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (date != null && date.isBefore(LocalDate.now())) {
+                    setDisable(true);
+                    setStyle("-fx-background-color: #eeeeee;");
+                }
+            }
+        });
     }
 
-    private void ocultarPaneles() {
-        panelTaller.setVisible(false); panelTaller.setManaged(false);
-        panelConcierto.setVisible(false); panelConcierto.setManaged(false);
-        panelFeria.setVisible(false); panelFeria.setManaged(false);
-        panelExposicion.setVisible(false); panelExposicion.setManaged(false);
-        panelCicloCine.setVisible(false); panelCicloCine.setManaged(false);
-    }
-    
-    private void mostrarPanel(VBox p) {
-        p.setVisible(true); p.setManaged(true);
-    }
-
-    // --- CARGAR DATOS PARA EDITAR ---
     public void initData(Evento evento) {
         this.eventoEnEdicion = evento;
-        
-        // Datos comunes
         txtNombre.setText(evento.getNombre());
-        
-        // Cargar Fecha y Hora separadas
         if (evento.getFechaInicio() != null) {
             dpFecha.setValue(evento.getFechaInicio().toLocalDate());
-            txtHora.setText(evento.getFechaInicio().toLocalTime().toString()); // Mostramos la hora
+            txtHora.setText(evento.getFechaInicio().toLocalTime().toString());
         }
-        
         txtDuracion.setText(String.valueOf(evento.getDuracionEstimada()));
         comboEstado.setValue(evento.getEstado());
+        if (!evento.getOrganizadores().isEmpty()) comboOrganizador.setValue(evento.getOrganizadores().get(0));
+
+        comboTipo.setDisable(true);
         
-        if (!evento.getOrganizadores().isEmpty()) {
-            comboOrganizador.setValue(evento.getOrganizadores().get(0));
-        }
-
-        comboTipo.setDisable(true); // Bloquear tipo
-
-        // Cargar específicos
-        if (evento instanceof Taller) {
+        // --- FIX CARGA CICLO CINE ---
+        ocultarPaneles();
+        if (evento instanceof Taller t) {
             comboTipo.setValue("Taller");
-            Taller t = (Taller) evento;
             txtCupo.setText(String.valueOf(t.getCupoMaximo()));
             comboModalidad.setValue(t.getModalidad());
             comboInstructor.setValue(t.getInstructor());
             mostrarPanel(panelTaller);
-        } 
-        else if (evento instanceof Concierto) {
-            comboTipo.setValue("Concierto");
-            Concierto c = (Concierto) evento;
-            comboTipoEntrada.setValue(c.getTipoEntrada());
-            if (!c.getArtistas().isEmpty()) comboArtista.setValue(c.getArtistas().get(0));
-            mostrarPanel(panelConcierto);
-        }
-        else if (evento instanceof Feria) {
-            comboTipo.setValue("Feria");
-            Feria f = (Feria) evento;
-            txtStands.setText(String.valueOf(f.getCantidadStands()));
-            if (f.isAlAireLibre()) {
-                comboUbicacionFeria.setValue("Es al aire libre");
-            } else {
-                comboUbicacionFeria.setValue("Techado");
-            }
-            mostrarPanel(panelFeria);
-        }
-        else if (evento instanceof Exposicion) {
-            comboTipo.setValue("Exposicion");
-            Exposicion e = (Exposicion) evento;
-            txtTipoArte.setText(e.getTipoArte());
-            comboCurador.setValue(e.getCurador());
-            mostrarPanel(panelExposicion);
-        }
-        else if (evento instanceof CicloCine) {
+        } else if (evento instanceof CicloCine cc) {
             comboTipo.setValue("CicloCine");
-            CicloCine cc = (CicloCine) evento;
-            chkHayCharlas.setSelected(cc.isHayCharlas());
+            chkHayCharlas.setSelected(cc.isHayCharlas()); // Aquí cargamos el dato
             mostrarPanel(panelCicloCine);
-        }
+        } // ... resto de los else if
     }
 
-    // --- GUARDAR EVENTO ---
     @FXML
     public void guardarEvento() {
         try {
-            // Validaciones básicas
-            if (txtNombre.getText().isEmpty()) throw new RuntimeException("El nombre es obligatorio");
-            if (dpFecha.getValue() == null) throw new RuntimeException("La fecha es obligatoria");
-            if (txtHora.getText().isEmpty()) throw new RuntimeException("La hora es obligatoria");
+            Evento ev = (eventoEnEdicion != null) ? eventoEnEdicion : crearInstancia(comboTipo.getValue());
+            ev.setNombre(txtNombre.getText());
+            ev.setEstado(comboEstado.getValue());
+            ev.setFechaInicio(dpFecha.getValue().atTime(LocalTime.parse(txtHora.getText())));
+            ev.setDuracionEstimada(Integer.parseInt(txtDuracion.getText()));
 
-            Evento eventoFinal;
-
-            // 1. Instanciación
-            if (eventoEnEdicion != null) {
-                eventoFinal = eventoEnEdicion;
-                eventoFinal.setEstado(comboEstado.getValue());
-            } else {
-                String tipo = comboTipo.getValue();
-                if (tipo == null) throw new RuntimeException("Seleccione tipo");
-                
-                switch (tipo) {
-                    case "Taller": eventoFinal = new Taller(); break;
-                    case "Concierto": eventoFinal = new Concierto(); break;
-                    case "Feria": eventoFinal = new Feria(); break;
-                    case "Exposicion": eventoFinal = new Exposicion(); break;
-                    case "CicloCine": eventoFinal = new CicloCine(); break;
-                    default: return;
-                }
-                eventoFinal.setEstado(comboEstado.getValue() != null ? comboEstado.getValue() : EstadoEvento.EN_PLANIFICACION);
-            }
-
-            // 2. Setear Datos Comunes
-            eventoFinal.setNombre(txtNombre.getText());
-
-            // --- MANEJO DE FECHA Y HORA ---
-            try {
-                // Parseamos la hora (ej: "18:30" o "18:30:00")
-                LocalTime hora = LocalTime.parse(txtHora.getText());
-                // Unimos Fecha + Hora
-                eventoFinal.setFechaInicio(dpFecha.getValue().atTime(hora));
-            } catch (DateTimeParseException e) {
-                throw new RuntimeException("Formato de hora inválido. Use HH:mm (Ej: 18:30)");
-            }
-
-            try {
-                eventoFinal.setDuracionEstimada(Integer.parseInt(txtDuracion.getText()));
-            } catch (Exception e) { eventoFinal.setDuracionEstimada(60); }
-            
-            eventoFinal.getOrganizadores().clear();
-            if (comboOrganizador.getValue() != null) eventoFinal.agregarOrganizador(comboOrganizador.getValue());
-
-            // 3. Setear Datos Específicos
-            if (eventoFinal instanceof Taller) {
-                Taller t = (Taller) eventoFinal;
+            // --- FIX PERSISTENCIA CICLO CINE ---
+            if (ev instanceof CicloCine cc) {
+                cc.setHayCharlas(chkHayCharlas.isSelected()); // Aquí guardamos el dato
+            } else if (ev instanceof Taller t) {
                 t.setCupoMaximo(Integer.parseInt(txtCupo.getText()));
                 t.setModalidad(comboModalidad.getValue());
                 t.setInstructor(comboInstructor.getValue());
-            } else if (eventoFinal instanceof Concierto) {
-                Concierto c = (Concierto) eventoFinal;
-                c.setTipoEntrada(comboTipoEntrada.getValue());
-                c.getArtistas().clear();
-                if (comboArtista.getValue() != null) c.agregarArtista(comboArtista.getValue());
-            } else if (eventoFinal instanceof Feria) {
-                Feria f = (Feria) eventoFinal;
-                f.setCantidadStands(Integer.parseInt(txtStands.getText()));
-                String ubicacion = comboUbicacionFeria.getValue();
-                if (ubicacion == null) throw new RuntimeException("Seleccione la ubicación de la feria");
-                f.setAlAireLibre("Es al aire libre".equals(ubicacion));
-            } else if (eventoFinal instanceof Exposicion) {
-                Exposicion e = (Exposicion) eventoFinal;
-                e.setTipoArte(txtTipoArte.getText());
-                e.setCurador(comboCurador.getValue());
-            } else if (eventoFinal instanceof CicloCine) {
-                CicloCine cc = (CicloCine) eventoFinal;
-                cc.setHayCharlas(chkHayCharlas.isSelected());
             }
 
-            // 4. Guardar
-            if (eventoEnEdicion != null) {
-                eventoRepo.actualizar(eventoFinal);
-            } else {
-                eventoRepo.guardar(eventoFinal);
-            }
+            if (eventoEnEdicion != null) eventoRepo.actualizar(ev);
+            else eventoRepo.guardar(ev);
 
             cerrarVentana();
-
-        } catch (NumberFormatException e) {
-            mostrarAlerta("Error de formato", "Revisá los números (Cupo, Duración, Stands).");
         } catch (Exception e) {
-            e.printStackTrace();
-            mostrarAlerta("Error", "No se pudo guardar: " + e.getMessage());
+            new Alert(Alert.AlertType.ERROR, "Error al guardar: " + e.getMessage()).show();
         }
     }
 
-    @FXML public void cerrarVentana() {
-        Stage s = (Stage) txtNombre.getScene().getWindow(); 
-        s.close();
+    private Evento crearInstancia(String tipo) {
+        return switch (tipo) {
+            case "Taller" -> new Taller();
+            case "CicloCine" -> new CicloCine();
+            case "Feria" -> new Feria();
+            default -> new Concierto();
+        };
     }
-    
-    private void mostrarAlerta(String t, String m) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(t); a.setContentText(m); a.showAndWait();
+
+    private void actualizarCombosPersonas() {
+        var todas = personaRepo.listarTodos();
+        comboOrganizador.getItems().setAll(todas);
+        comboInstructor.getItems().setAll(todas);
+        comboArtista.getItems().setAll(todas);
+        comboCurador.getItems().setAll(todas);
     }
+
+    @FXML
+    public void onTipoChange() {
+        if (eventoEnEdicion != null) return;
+        ocultarPaneles();
+        String tipo = comboTipo.getValue();
+        if (tipo == null) return;
+        switch (tipo) {
+            case "Taller" -> mostrarPanel(panelTaller);
+            case "CicloCine" -> mostrarPanel(panelCicloCine);
+            case "Concierto" -> mostrarPanel(panelConcierto);
+            case "Feria" -> mostrarPanel(panelFeria);
+        }
+    }
+
+    private void ocultarPaneles() {
+        VBox[] p = {panelTaller, panelConcierto, panelFeria, panelExposicion, panelCicloCine};
+        for (VBox v : p) if (v != null) { v.setVisible(false); v.setManaged(false); }
+    }
+
+    private void mostrarPanel(VBox p) { if (p != null) { p.setVisible(true); p.setManaged(true); } }
+
+    @FXML public void cerrarVentana() { ((Stage)txtNombre.getScene().getWindow()).close(); }
 }

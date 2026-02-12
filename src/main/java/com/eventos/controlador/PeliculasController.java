@@ -4,61 +4,64 @@ import com.eventos.modelo.CicloCine;
 import com.eventos.modelo.Pelicula;
 import com.eventos.repo.EventoRepository;
 import com.eventos.repo.EventoRepositoryImpl;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import java.util.List;
 
 public class PeliculasController {
 
-    @FXML private Label lblCicloNombre;
+    @FXML private Label lblCicloNombre, lblTotalDuracion;
     @FXML private ListView<Pelicula> listaPeliculas;
-    @FXML private TextField txtTitulo;
-    @FXML private TextField txtDirector;
-    
-    // CAMBIO: Variable para la duración
-    @FXML private TextField txtDuracion;
+    @FXML private TextField txtTitulo, txtDirector, txtDuracion;
 
-    private EventoRepository repo = new EventoRepositoryImpl();
-    private CicloCine cicloActual;
+    private final EventoRepository repo = new EventoRepositoryImpl();
+    private CicloCine cicloActual;   // ← siempre actualizada con la última versión gestionada
+
+    @FXML
+    public void initialize() {
+        listaPeliculas.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(Pelicula p, boolean empty) {
+                super.updateItem(p, empty);
+                setText((empty || p == null) ? null : p.getTitulo() + " [" + p.getDuracionMinutos() + " min]");
+            }
+        });
+    }
 
     public void initData(CicloCine ciclo) {
         this.cicloActual = ciclo;
         lblCicloNombre.setText("Ciclo: " + ciclo.getNombre());
-        actualizarLista();
+        actualizarInterfaz();
     }
 
-    private void actualizarLista() {
-        listaPeliculas.getItems().clear();
-        listaPeliculas.getItems().addAll(cicloActual.getPeliculas());
+    private void actualizarInterfaz() {
+        if (cicloActual == null) return;
+        List<Pelicula> pelis = cicloActual.getPeliculas();
+        listaPeliculas.setItems(FXCollections.observableArrayList(pelis));
+
+        int total = pelis.stream().mapToInt(Pelicula::getDuracionMinutos).sum();
+        lblTotalDuracion.setText(total + " minutos");
     }
 
     @FXML
     public void agregarPelicula() {
         try {
-            String titulo = txtTitulo.getText();
-            String director = txtDirector.getText();
-            
-            // Validaciones
-            if (titulo.isEmpty()) throw new RuntimeException("Falta el título");
-            if (txtDuracion.getText().isEmpty()) throw new RuntimeException("Falta la duración");
+            Pelicula p = new Pelicula(
+                txtTitulo.getText(),
+                txtDirector.getText(),
+                Integer.parseInt(txtDuracion.getText())
+            );
 
-            // Parsear duración
-            int minutos = Integer.parseInt(txtDuracion.getText());
-
-            // Crear película con duración
-            Pelicula p = new Pelicula(titulo, director, minutos);
-            
             cicloActual.agregarPelicula(p);
-            repo.actualizar(cicloActual); 
 
-            // Limpieza
-            txtTitulo.clear(); txtDirector.clear(); txtDuracion.clear();
-            actualizarLista();
-            
-        } catch (NumberFormatException e) {
-            mostrarAlerta("Error", "La duración debe ser un número (minutos).");
+            // 🔥 GUARDAR Y REASIGNAR LA ENTIDAD GESTIONADA
+            cicloActual = (CicloCine) repo.actualizar(cicloActual);
+
+            limpiarCampos();
+            actualizarInterfaz();
         } catch (Exception e) {
-            e.printStackTrace();
-            mostrarAlerta("Error", "No se pudo guardar: " + e.getMessage());
+            new Alert(Alert.AlertType.ERROR, "Error: " + e.getMessage()).show();
         }
     }
 
@@ -68,12 +71,15 @@ public class PeliculasController {
         if (seleccionada == null) return;
 
         cicloActual.eliminarPelicula(seleccionada);
-        repo.actualizar(cicloActual);
-        actualizarLista();
+
+        cicloActual = (CicloCine) repo.actualizar(cicloActual);
+
+        actualizarInterfaz();
     }
 
-    private void mostrarAlerta(String t, String m) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(t); a.setContentText(m); a.showAndWait();
+    private void limpiarCampos() {
+        txtTitulo.clear();
+        txtDirector.clear();
+        txtDuracion.clear();
     }
 }
