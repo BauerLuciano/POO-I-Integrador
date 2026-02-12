@@ -9,7 +9,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import java.util.function.UnaryOperator;
 
-public class PersonaControlador {
+public class PersonaController {
 
     @FXML private TextField txtNombre;
     @FXML private TextField txtDni;
@@ -27,14 +27,15 @@ public class PersonaControlador {
         configurarInput(txtTelefono, 20, "[0-9]*");
     }
 
-    // MÉTODO QUE PIDE EL COMPILADOR
     public void setPersona(Persona p) {
         this.personaActual = p;
-        if(lblTitulo != null) lblTitulo.setText("Editar: " + p.getNombreCompleto());
-        txtNombre.setText(p.getNombreCompleto());
-        txtDni.setText(p.getDni());
-        txtEmail.setText(p.getEmail());
-        txtTelefono.setText(p.getTelefono());
+        if (p != null) {
+            if(lblTitulo != null) lblTitulo.setText("Editar: " + p.getNombreCompleto());
+            txtNombre.setText(p.getNombreCompleto());
+            txtDni.setText(p.getDni());
+            txtEmail.setText(p.getEmail());
+            txtTelefono.setText(p.getTelefono());
+        }
     }
 
     private void configurarInput(TextField textField, int maxLength, String regex) {
@@ -52,36 +53,49 @@ public class PersonaControlador {
         String dni = txtDni.getText().trim();
 
         if (nombre.isEmpty() || dni.isEmpty()) {
-            mostrarAlertaNashe("Datos Incompletos", "Por favor, ingresá Nombre y DNI.", true);
+            mostrarAlerta("Datos Incompletos", "Por favor, ingresá Nombre y DNI.", true);
             return;
         }
 
-        // Validación de duplicado usando el Repositorio
+        // Validación de duplicado
         Persona existente = personaRepo.buscarPorDni(dni);
         if (existente != null) {
+            // Si es NUEVA (personaActual null) o si es EDICIÓN pero el ID es distinto
             if (personaActual == null || !existente.getId().equals(personaActual.getId())) {
-                mostrarAlertaNashe("¡DNI Duplicado!", "Ya existe la persona: " + existente.getNombreCompleto(), true);
+                mostrarAlerta("¡DNI Duplicado!", "Ya existe la persona: " + existente.getNombreCompleto(), true);
                 return;
             }
         }
 
         try {
-            if (personaActual == null) personaActual = new Persona();
+            boolean esEdicion = (personaActual != null && personaActual.getId() != null);
+
+            if (!esEdicion) {
+                personaActual = new Persona();
+            }
+            
+            // Actualizamos los datos del objeto
             personaActual.setNombreCompleto(nombre);
             personaActual.setDni(dni);
             personaActual.setEmail(txtEmail.getText().trim());
             personaActual.setTelefono(txtTelefono.getText().trim());
 
-            personaRepo.guardar(personaActual);
+           
+            if (esEdicion) {
+                personaRepo.actualizar(personaActual);
+            } else {
+                personaRepo.guardar(personaActual); 
+            }
 
-            mostrarAlertaNashe("Éxito", "Persona guardada correctamente.", false);
+            mostrarAlerta("Éxito", "Persona guardada correctamente.", false);
             cerrar(event);
+
         } catch (Exception e) {
-            mostrarAlertaNashe("Error", "No se pudo guardar: " + e.getMessage(), true);
+            mostrarAlerta("Error", "No se pudo guardar: " + e.getMessage(), true);
         }
     }
 
-    private void mostrarAlertaNashe(String titulo, String mensaje, boolean esError) {
+    private void mostrarAlerta(String titulo, String mensaje, boolean esError) {
         Alert alert = new Alert(esError ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);
         alert.setHeaderText(null);

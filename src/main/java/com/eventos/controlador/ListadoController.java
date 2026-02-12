@@ -13,7 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.net.URL; // Importante
+import java.net.URL;
 import java.util.Optional;
 
 public class ListadoController {
@@ -67,7 +67,9 @@ public class ListadoController {
     }
 
     private void cargarPersonas() {
+        // Recarga la lista desde la base de datos
         tabla.setItems(FXCollections.observableArrayList(repo.listarTodos()));
+        tabla.refresh(); 
     }
 
     @FXML
@@ -81,21 +83,19 @@ public class ListadoController {
 
     private void abrirFormulario(Persona personaAEditar) {
         try {
-            // --- CHECKEO ANTI-BUGS ---
-            URL url = getClass().getResource("/vista/formulario_persona.fxml");
+            URL url = getClass().getResource("/vista/formulario_persona.fxml"); 
+            
             if (url == null) {
-                System.err.println("¡ERROR CRÍTICO! No encuentro el archivo: /vista/formulario_persona.fxml");
-                System.err.println("Por favor verificá la carpeta src/main/resources/vista/");
-                mostrarAlerta("Error de Archivo", "No se encuentra la vista del formulario.");
+                mostrarAlerta("Error", "No se encuentra el archivo FXML del formulario.");
                 return;
             }
-            // -------------------------
 
             FXMLLoader loader = new FXMLLoader(url);
             Parent root = loader.load();
 
+            PersonaController controller = loader.getController();
+            
             if (personaAEditar != null) {
-                PersonaControlador controller = loader.getController();
                 controller.setPersona(personaAEditar);
             }
 
@@ -103,8 +103,8 @@ public class ListadoController {
             stage.setTitle(personaAEditar == null ? "Nueva Persona" : "Editar Persona");
             stage.setScene(new Scene(root));
             stage.initModality(Modality.APPLICATION_MODAL);
+            
             stage.showAndWait();
-
             cargarPersonas(); 
 
         } catch (Exception e) {

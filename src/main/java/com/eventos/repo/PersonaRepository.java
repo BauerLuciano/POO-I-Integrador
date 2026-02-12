@@ -1,7 +1,5 @@
 package com.eventos.repo;
 
-import java.util.List;
-
 import com.eventos.modelo.Persona;
 import com.eventos.util.JPAUtil;
 import jakarta.persistence.EntityManager;
@@ -10,16 +8,11 @@ import java.util.List;
 
 public class PersonaRepository {
 
-    // 1. GUARDAR (Sirve para Crear y para Editar)
-    public void guardar(Persona p) {
+    public void guardar(Persona persona) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            if (p.getId() == null) {
-                em.persist(p); // Es nuevo -> INSERT
-            } else {
-                em.merge(p);   // Ya existe -> UPDATE
-            }
+            em.persist(persona);
             em.getTransaction().commit();
         } catch (Exception e) {
             em.getTransaction().rollback();
@@ -29,26 +22,25 @@ public class PersonaRepository {
         }
     }
 
-    // 2. ELIMINAR
-    public void eliminar(Long id) {
+    public void actualizar(Persona persona) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            Persona p = em.find(Persona.class, id);
-            if (p != null) {
-                em.remove(p);
-            }
+            em.merge(persona); 
             em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
         } finally {
             em.close();
         }
     }
+    
 
-    // 3. LISTAR TODOS
-    public List<Persona> listarTodos() {
+    public Persona buscarPorId(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery("SELECT p FROM Persona p ORDER BY p.id", Persona.class).getResultList();
+            return em.find(Persona.class, id);
         } finally {
             em.close();
         }
@@ -58,10 +50,36 @@ public class PersonaRepository {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery("SELECT p FROM Persona p WHERE p.dni = :dni", Persona.class)
-                     .setParameter("dni", dni)
-                     .getSingleResult();
+                    .setParameter("dni", dni)
+                    .getSingleResult();
         } catch (NoResultException e) {
-            return null; 
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Persona> listarTodos() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery("SELECT p FROM Persona p", Persona.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public void eliminar(Long id) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Persona persona = em.find(Persona.class, id);
+            if (persona != null) {
+                em.remove(persona);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            throw e;
         } finally {
             em.close();
         }
