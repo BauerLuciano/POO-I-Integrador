@@ -3,8 +3,8 @@ package com.eventos.modelo;
 import com.eventos.enums.Modalidad;
 import com.eventos.interfaz.Inscribible;
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "talleres")
@@ -21,17 +21,11 @@ public class Taller extends Evento implements Inscribible {
     @JoinColumn(name = "instructor_id")
     private Persona instructor;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "taller_inscripciones",
-        joinColumns = @JoinColumn(name = "taller_id"),
-        inverseJoinColumns = @JoinColumn(name = "persona_id")
-    )
-    private List<Persona> inscripciones = new ArrayList<>();
+    // USAMOS SET: Esto evita que Bauer Luciano aparezca dos veces
+    @OneToMany(mappedBy = "taller", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<Inscripcion> inscripciones = new LinkedHashSet<>();
 
-    public Taller() {
-        super();
-    }
+    public Taller() { super(); }
 
     public Taller(String nombre, java.time.LocalDateTime fecha, int duracion, int cupo, Modalidad mod) {
         super();
@@ -42,44 +36,34 @@ public class Taller extends Evento implements Inscribible {
         this.modalidad = mod;
     }
 
-    
     @Override
     public boolean hayCupo() {
         return inscripciones.size() < cupoMaximo;
     }
 
-  @Override
+    @Override
     public void inscribir(Persona persona) {
-        
-        // 1. VALIDACIÓN DE ESTADO
         if (this.getEstado() != com.eventos.enums.EstadoEvento.CONFIRMADO) {
-            throw new RuntimeException("Solo se pueden inscribir a eventos CONFIRMADOS.\nEstado actual: " + this.getEstado());
+            throw new RuntimeException("Solo se pueden inscribir a eventos CONFIRMADOS.");
         }
 
-        // 2. VALIDACIÓN DE CUPO
         if (!hayCupo()) { 
             throw new RuntimeException("No hay cupo disponible.");
         }
 
-        // 3. VALIDACIÓN DE DUPLICADOS 
-        if (inscripciones.contains(persona)) {
+        Inscripcion nueva = new Inscripcion(this, persona);
+        // Si el Set no lo agrega, es porque ya existía el DNI en este taller
+        if (!inscripciones.add(nueva)) {
             throw new RuntimeException("Esta persona YA está inscripta.");
         }
-
-        inscripciones.add(persona);
     }
 
     // --- GETTERS Y SETTERS ---
     public int getCupoMaximo() { return cupoMaximo; }
     public void setCupoMaximo(int cupoMaximo) { this.cupoMaximo = cupoMaximo; }
-
     public Modalidad getModalidad() { return modalidad; }
     public void setModalidad(Modalidad modalidad) { this.modalidad = modalidad; }
-
     public Persona getInstructor() { return instructor; }
     public void setInstructor(Persona instructor) { this.instructor = instructor; }
-
-    public List<Persona> getInscripciones() {
-        return inscripciones;
-    }
+    public Set<Inscripcion> getInscripciones() { return inscripciones; }
 }
