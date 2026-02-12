@@ -7,7 +7,7 @@ import com.eventos.repo.EventoRepositoryImpl;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import java.util.List;
+import java.util.ArrayList;
 
 public class PeliculasController {
 
@@ -16,7 +16,7 @@ public class PeliculasController {
     @FXML private TextField txtTitulo, txtDirector, txtDuracion;
 
     private final EventoRepository repo = new EventoRepositoryImpl();
-    private CicloCine cicloActual;   // ← siempre actualizada con la última versión gestionada
+    private CicloCine cicloActual;
 
     @FXML
     public void initialize() {
@@ -37,28 +37,25 @@ public class PeliculasController {
 
     private void actualizarInterfaz() {
         if (cicloActual == null) return;
-        List<Pelicula> pelis = cicloActual.getPeliculas();
-        listaPeliculas.setItems(FXCollections.observableArrayList(pelis));
+        
+        // Convertimos el Set a un ArrayList para que el ListView de JavaFX pueda mostrarlo
+        listaPeliculas.setItems(FXCollections.observableArrayList(new ArrayList<>(cicloActual.getPeliculas())));
 
-        int total = pelis.stream().mapToInt(Pelicula::getDuracionMinutos).sum();
+        int total = cicloActual.getDuracionTotalPeliculas();
         lblTotalDuracion.setText(total + " minutos");
     }
 
     @FXML
     public void agregarPelicula() {
         try {
-            Pelicula p = new Pelicula(
-                txtTitulo.getText(),
-                txtDirector.getText(),
-                Integer.parseInt(txtDuracion.getText())
-            );
-
+            Pelicula p = new Pelicula(txtTitulo.getText(), txtDirector.getText(), Integer.parseInt(txtDuracion.getText()));
+            
             cicloActual.agregarPelicula(p);
-
-            // 🔥 GUARDAR Y REASIGNAR LA ENTIDAD GESTIONADA
+            
+            // Actualizamos en la base de datos y recuperamos la versión limpia
             cicloActual = (CicloCine) repo.actualizar(cicloActual);
 
-            limpiarCampos();
+            txtTitulo.clear(); txtDirector.clear(); txtDuracion.clear();
             actualizarInterfaz();
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, "Error: " + e.getMessage()).show();
@@ -68,18 +65,10 @@ public class PeliculasController {
     @FXML
     public void eliminarPelicula() {
         Pelicula seleccionada = listaPeliculas.getSelectionModel().getSelectedItem();
-        if (seleccionada == null) return;
-
-        cicloActual.eliminarPelicula(seleccionada);
-
-        cicloActual = (CicloCine) repo.actualizar(cicloActual);
-
-        actualizarInterfaz();
-    }
-
-    private void limpiarCampos() {
-        txtTitulo.clear();
-        txtDirector.clear();
-        txtDuracion.clear();
+        if (seleccionada != null) {
+            cicloActual.eliminarPelicula(seleccionada);
+            cicloActual = (CicloCine) repo.actualizar(cicloActual);
+            actualizarInterfaz();
+        }
     }
 }
